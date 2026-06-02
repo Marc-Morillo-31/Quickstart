@@ -29,6 +29,8 @@ public class Drive {
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
 
+    public static double driveP = 0.02, driveI = 0, driveD = 0.001, driveF = 0;
+    private PIDFController turnController = new PIDFController(driveP, driveI, driveD, driveF);
 
     public Drive(HardwareMap hardwareMap) {
         frontLeftDrive = hardwareMap.get(DcMotorEx.class, "front_left_drive");
@@ -42,12 +44,11 @@ public class Drive {
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
 
         
-        // This uses RUN_USING_ENCODER to be more accurate.   If you don't have the encoder
-        // wires, you should remove these
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // Set to RUN_WITHOUT_ENCODER for Pedro Pathing
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         
         // Sets motor zero power behavior
         // Drivetrain is BRAKE
@@ -74,31 +75,41 @@ public class Drive {
     public void update(Gamepad gamepad, Gamepad previousGamepad, double voltageMultiplier) {
 
         telemetry.addLine("Press A to reset Yaw (for field relative)");
-        telemetry.addLine("Hold left bumper to drive in field relative");
+        telemetry.addLine("Press Left Bumper to switch between robot centric and field relative");
 
         // If you press the A button, then you reset the Yaw to be zero from the way
         // the robot is currently pointing
+        // This is useful if you are doing field relative and you want to reset the direction you are considering to be forward
+
         if (gamepad1.a) {
             imu.resetYaw();
         }
-oint of view of the robot
-        // (much like driving an RC vehicle)
+
 
         if (gamepad1.left_bumper && !previousGamepad.left_bumper) {
             robotCentric = !robotCentric;
         }
+
+        double y = -gamepad1.left_stick_y;
+        double x = gamepad1.left_stick_x * 1.1;
+        double rx = gamepad1.right_stick_x;
+
+        // frontLeftMotor.setPower(y + x + rx);
+        // backLeftMotor.setPower(y - x + rx);
+        // frontRightMotor.setPower(y - x - rx);
+        // backRightMotor.setPower(y + x - rx);
         if (!robotCentric) {
-            driveFieldRelative(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            driveFieldRelative(y, x, rx);
         } else {
-            drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
+            drive(y, x, rx);
         }
     }
 
     // This routine drives the robot field relative
-    private void driveFieldRelative(double forward, double right, double rotate) {
+    private void driveFieldRelative(double y, double x, double rx) {
         // First, convert direction being asked to drive to polar coordinates
-        double theta = Math.atan2(forward, right);
-        double r = Math.hypot(right, forward);
+        double theta = Math.atan2(y, x);
+        double r = Math.hypot(x, y);
 
         // Second, rotate angle by the angle the robot is pointing
         theta = AngleUnit.normalizeRadians(theta -
@@ -109,35 +120,25 @@ oint of view of the robot
         double newRight = r * Math.cos(theta);
 
         // Finally, call the drive method with robot relative forward and right amounts
-        drive(newForward, newRight, rotate);
+        drive(newForward, newRight, rx * 1.1);
     }
 
-    // Thanks to FTC16072 for sharing this code!!
-    public void drive(double forward, double right, double rotate) {
-        // This calculates the power needed for each wheel based on the amount of forward,
-        // strafe right, and rotate
-        double frontLeftPower = forward + right + rotate;
-        double frontRightPower = forward - right - rotate;
-        double backRightPower = forward + right - rotate;
-        double backLeftPower = forward - right + rotate;
 
-        double maxPower = 1.0;
-        double maxSpeed = 1.0;  // make this slower for outreaches
+    public void drive(double y, double x, double rx) {
+        turnController.setP(driveP);
+        turnController.setI(driveI);
+        turnController.setD(driveD);
+        turnController.setF(driveF);
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+        double frontLeftPower = (y + x + rx) / denominator;
+        double backLeftPower = (y - x + rx) / denominator;
+        double frontRightPower = (y - x - rx) / denominator;
+        double backRightPower = (y + x - rx) / denominator;
 
-        // This is needed to make sure we don't pass > 1.0 to any wheel
-        // It allows us to keep all of the motors in proportion to what they should
-        // be and not get clipped
-        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
 
-        // We multiply by maxSpeed so that it can be set lower for outreaches
-        // When a young child is driving the robot, we may not want to allow full
-        // speed.
-        frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
-        frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
-        backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
-        backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
+        frontLeft.setPower(frontLeftPower);
+        backLeft.setPower(backLeftPower);
+        frontRight.setPower(frontRightPower);
+        backRight.setPower(backRightPower);
     }
 }
