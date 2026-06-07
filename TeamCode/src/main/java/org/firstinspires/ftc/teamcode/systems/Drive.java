@@ -20,10 +20,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class Drive {
     // This declares the drivetrain motors.
-    public static DcMotorEx frontLeftDrive;
-    public static DcMotorEx frontRightDrive;
-    public static DcMotorEx backLeftDrive;
-    public static DcMotorEx backRightDrive;
+    public static DcMotorEx frontLeft;
+    public static DcMotorEx frontRight;
+    public static DcMotorEx backLeft;
+    public static DcMotorEx backRight;
     public static Gamepad previousGamepad = new Gamepad();
     public static boolean robotCentric = true;
     // This declares the IMU needed to get the current direction the robot is facing
@@ -33,29 +33,29 @@ public class Drive {
     private PIDFController turnController = new PIDFController(driveP, driveI, driveD, driveF);
 
     public Drive(HardwareMap hardwareMap) {
-        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "front_left_drive");
-        frontRightDrive = hardwareMap.get(DcMotorEx.class, "front_right_drive");
-        backLeftDrive = hardwareMap.get(DcMotorEx.class, "back_left_drive");
-        backRightDrive = hardwareMap.get(DcMotorEx.class, "back_right_drive");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
 
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
 
         
         // Set to RUN_WITHOUT_ENCODER for Pedro Pathing
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         
         // Sets motor zero power behavior
         // Drivetrain is BRAKE
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
