@@ -20,15 +20,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class Drive {
     // This declares the intake and transfer motors.
-    public static DcMotorEx intake;
-    public static DcMotorEx transfer;
+    public static DcMotorEx leftShooter;
+    public static DcMotorEx rightShooter;
     
 
 
     public Intake(HardwareMap hardwareMap) {
         // Basic mapping for the shooter, transfer, and intake
-        intake = hardwareMap.get(DcMotorEx.class, "intake");
-        transfer = hardwareMap.get(DcMotorEx.class, "transfer");
+        leftShooter = hardwareMap.get(DcMotorEx.class, "left_shooter");
+        rightShooter = hardwareMap.get(DcMotorEx.class, "right_shooter");
         
         
         
